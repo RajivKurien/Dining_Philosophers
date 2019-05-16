@@ -1,4 +1,4 @@
-# Dining_Philosophers
+# Dining Philosophers
 
 - Five philosphers sit around a table
 - Forks are placed between each pair
@@ -27,9 +27,9 @@ Philosophers seated at the numbers, and the forks at the letters.
 ## Philosopher states
 
                              (2)
-               / ------ Left Thinking ------ \  
-              /                               \
-             /                                 \
+               / ------ Left Thinking  ------ \  
+              /                                \
+             /                                  \
      (1) Thinking                              Eating  (4)
              \                                  /
               \                                /
@@ -39,10 +39,10 @@ Philosophers seated at the numbers, and the forks at the letters.
                
                
 Each philosopher transitions between four possible states:
-- Thinking: the philosopher does not hold any forks. So they are thinking
-- Left Thinking: the philosopher holds the fork to their left. They are still thinking
-- Right Thinking: the philosopher holds the fork to their right. They are still thinking
-- Eating: the philosopher holds both their forks, so they are eating.
+- **Thinking**: the philosopher does not hold any forks. So they are thinking
+- **Left Thinking**: the philosopher holds the fork to their left. They are still thinking
+- **Right Thinking**: the philosopher holds the fork to their right. They are still thinking
+- **Eating**: the philosopher holds both their forks, so they are eating.
 
 At each state the philosopher has three other possible states they can attempt to move towards.
 Eg: A philosopher in state 1 can attempt move to 1, 2, or 3. 
