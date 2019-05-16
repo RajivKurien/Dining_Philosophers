@@ -41,7 +41,7 @@ impl Table {
     }
 }
 
-#[derive(Debug, PartialEq, Copy)]
+#[derive(Debug, PartialEq)]
 pub struct SeatingPosition {
     pub position: usize
 }
@@ -60,14 +60,6 @@ impl SeatingPosition {
     pub fn return_right_fork(&self, fork: Fork, table: &mut Table) {
         let next_position = (self.position + 1) % table.forks.len();
         table.return_fork(fork, next_position);
-    }
-}
-
-impl Clone for SeatingPosition {
-    fn clone(&self) -> Self {
-        SeatingPosition {
-            position: self.position
-        }
     }
 }
 
@@ -193,5 +185,3 @@ mod tests {
         assert_ne!(table.get_fork(0), None);
     }
 }
-
-

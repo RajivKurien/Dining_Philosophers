@@ -3,7 +3,7 @@ mod dining_philosophers;
 
 
 use crate::thread_pool::thread_pool::ThreadPool;
-use crate::dining_philosophers::table::Table;
+use crate::dining_philosophers::table::{Table, SeatingPosition};
 use crate::dining_philosophers::thinking_philosopher::ThinkingPhilosopher;
 use crate::dining_philosophers::philosophers::Actor;
 
@@ -18,24 +18,37 @@ fn main() {
 
     let size = 5;
     let table = Table::new(size);
-    let seating_positions = table.get_seating_positions();
+    let seating_positions: Vec<Arc<SeatingPosition>> = table.get_seating_positions().into_iter()
+        .map(|s| Arc::new(s))
+        .collect();
+
     let table = Arc::new(Mutex::new(table));
     let mut actors = Vec::with_capacity(size);
-    let thread_pool = ThreadPool::new(size);
+//    let thread_pool = ThreadPool::new(size);
 
     for i in 0..size {
         actors.push(Actor {
-            philosopher: Box::new(ThinkingPhilosopher::new(seating_positions[i])),
+            philosopher: Box::new(ThinkingPhilosopher::new(seating_positions[i].clone())),
             table: Arc::clone(&table),
         })
     }
 
-    thread_pool.execute(move || {
+    let update_state = |i: usize, actors: &mut Vec<Actor>| {
         loop {
-            for i in 0..size {
-                actors[i].execute();
-            }
+            (&mut actors[i] as &mut Actor).execute();
             thread::sleep(Duration::from_secs(2));
         }
-    });
+    };
+
+    // Todo: Use the interior mutability pattern to pass an array of actors to threads
+
+//    let mut join_handles = Vec::with_capacity(size);
+
+//    for i in 0..size {
+//        join_handles.push(thread::spawn( || {
+//            update_state(i, &mut actors);
+//        }));
+//
+//        join_handles[0].join();
+//    }
 }
