@@ -3,4 +3,14 @@
 [[package]]
 name = "Dining_Philosophers"
 version = "0.1.0"
+dependencies = [
+ "futures 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
+[[package]]
+name = "futures"
+version = "0.1.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum futures 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)" = "a2037ec1c6c1c4f79557762eab1f7eae1f64f6cb418ace90fae88f0942b60139"

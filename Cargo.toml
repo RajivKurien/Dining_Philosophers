@@ -5,3 +5,4 @@ authors = ["Rajiv Kurien <rajiv.kurien@zuhlke.com>"]
 edition = "2018"
 
 [dependencies]
+futures = "0.1"
