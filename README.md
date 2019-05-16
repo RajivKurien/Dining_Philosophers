@@ -1,12 +1,12 @@
 # Dining Philosophers
-
+#### Problem: How to design an algorithm so that each philosopher can continue forever between eating and thinking without starving.
 - Five philosphers sit around a table
 - Forks are placed between each pair
 - The philosophers alternatively think and eat
 - To eat they need two forks
 - A fork can only be held by one philosopher at a time
 
-##### Problem: How to design an algorithm so that each philosopher can continue forever between eating and thinking without starving.
+
 
 https://en.wikipedia.org/wiki/Dining_philosophers_problem
 
