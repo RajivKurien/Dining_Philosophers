@@ -6,7 +6,7 @@
 - To eat they need two forks
 - A fork can only be held by one philosopher at a time
 
-Problem: How to design an algorithm so that each philosopher can continue forever between eating and thinking without starving.
+###### Problem: How to design an algorithm so that each philosopher can continue forever between eating and thinking without starving.
 
 https://en.wikipedia.org/wiki/Dining_philosophers_problem
 
