@@ -1,9 +1,10 @@
-use crate::dining_philosophers::fork::Fork;
+use std::sync::Arc;
+
 use crate::dining_philosophers::eating::Eating;
-use crate::dining_philosophers::thinking::Thinking;
+use crate::dining_philosophers::fork::Fork;
 use crate::dining_philosophers::philosopher::{State, Status};
 use crate::dining_philosophers::table::{Table, TableInteraction};
-use std::sync::Arc;
+use crate::dining_philosophers::thinking::Thinking;
 
 #[derive(Debug, PartialEq)]
 pub struct LeftThinking {
@@ -27,12 +28,12 @@ impl LeftThinking {
 }
 
 impl State for LeftThinking {
-    fn transition(& mut self, table: &mut Table) -> Box<State + Send + Sync> {
-        match self.seating_position.get_right_fork(table) {
+    fn transition(&mut self) -> Box<State + Send + Sync> {
+        match self.seating_position.get_right_fork() {
             None => {
                 println!("{}: Not right, back to thinking", self.seating_position.position);
                 let (philosopher, fork) = self.drop_left();
-                self.seating_position.return_left_fork(fork, table);
+                self.seating_position.return_left_fork(fork);
                 Box::new(philosopher)
             }
             Some(fork) => {
@@ -49,13 +50,14 @@ impl State for LeftThinking {
 
 #[cfg(test)]
 mod tests {
-    use crate::dining_philosophers::left_thinking::LeftThinking;
-    use crate::dining_philosophers::fork::Fork;
-    use crate::dining_philosophers::eating::Eating;
-    use crate::dining_philosophers::thinking::Thinking;
-    use crate::dining_philosophers::table::{TableInteraction, Table};
-    use crate::dining_philosophers::philosopher::{State, Status};
     use std::sync::{Arc, Mutex};
+
+    use crate::dining_philosophers::eating::Eating;
+    use crate::dining_philosophers::fork::Fork;
+    use crate::dining_philosophers::left_thinking::LeftThinking;
+    use crate::dining_philosophers::philosopher::{State, Status};
+    use crate::dining_philosophers::table::{Table, TableInteraction};
+    use crate::dining_philosophers::thinking::Thinking;
 
     #[test]
     fn take_right_becomes_eating() {
@@ -88,11 +90,10 @@ mod tests {
     fn changes_to_eating_when_right_fork_available() {
         let mut table = Table::new(2);
         let seating_position = table.get_interactions().pop().unwrap();
-        let mut table = Table::new(2);
-        let fork = seating_position.get_left_fork(&mut table).unwrap();
+        let fork = seating_position.get_left_fork().unwrap();
         let mut unit: Box<State> = Box::new(LeftThinking::new(fork, Arc::new(seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::Eating);
     }
@@ -101,11 +102,10 @@ mod tests {
     fn changes_to_thinking_when_right_fork_is_not_available() {
         let mut table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
-        let mut table = Table::new(1);
-        let mut fork = seating_position.get_left_fork(&mut table);
+        let mut fork = seating_position.get_left_fork();
         let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::new(seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::Thinking);
     }
@@ -113,16 +113,12 @@ mod tests {
     #[test]
     fn returns_left_fork_when_right_fork_is_not_available() {
         let mut table = Table::new(1);
-        let seating_position = table.get_interactions().pop().unwrap();
-        let mut table = Table::new(1);
-        let mut fork = seating_position.get_left_fork(&mut table);
-        let arc = Arc::new(seating_position);
-        let seating_position = Arc::clone(&arc);
-        let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), arc));
+        let seating_position = Arc::new(table.get_interactions().pop().unwrap());
+        let mut fork = seating_position.get_left_fork();
+        let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::clone(&seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
-
-        assert_eq!(seating_position.get_left_fork(&mut table), Some(Fork));
+        assert_eq!(seating_position.get_left_fork(), Some(Fork));
     }
 }

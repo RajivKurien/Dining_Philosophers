@@ -1,9 +1,10 @@
+use std::sync::Arc;
+
 use crate::dining_philosophers::fork::Fork;
 use crate::dining_philosophers::left_thinking::LeftThinking;
-use crate::dining_philosophers::right_thinking::RightThinking;
 use crate::dining_philosophers::philosopher::{State, Status};
+use crate::dining_philosophers::right_thinking::RightThinking;
 use crate::dining_philosophers::table::{Table, TableInteraction};
-use std::sync::Arc;
 
 #[derive(Debug, PartialEq)]
 pub struct Thinking {
@@ -25,15 +26,15 @@ impl Thinking {
 }
 
 impl State for Thinking {
-    fn transition(&mut self, table: &mut Table) -> Box<State + Send + Sync> {
-        match self.seating_position.get_left_fork(table) {
+    fn transition(&mut self) -> Box<State + Send + Sync> {
+        match self.seating_position.get_left_fork() {
             None => {
                 println!("{}: Still thinking", self.seating_position.position);
                 Box::new(Thinking::new(self.seating_position.clone()))
             }
             Some(fork) => {
                 println!("{}: Got the left one!", self.seating_position.position);
-                Box::new(LeftThinking::new(fork, self.seating_position.clone()))
+                Box::new(self.take_left(fork))
             }
         }
     }
@@ -45,13 +46,14 @@ impl State for Thinking {
 
 #[cfg(test)]
 mod tests {
-    use crate::dining_philosophers::thinking::Thinking;
-    use crate::dining_philosophers::left_thinking::LeftThinking;
-    use crate::dining_philosophers::fork::Fork;
-    use crate::dining_philosophers::right_thinking::RightThinking;
-    use crate::dining_philosophers::philosopher::{State, Status};
-    use crate::dining_philosophers::table::{Table, TableInteraction};
     use std::sync::{Arc, Mutex};
+
+    use crate::dining_philosophers::fork::Fork;
+    use crate::dining_philosophers::left_thinking::LeftThinking;
+    use crate::dining_philosophers::philosopher::{State, Status};
+    use crate::dining_philosophers::right_thinking::RightThinking;
+    use crate::dining_philosophers::table::{Table, TableInteraction};
+    use crate::dining_philosophers::thinking::Thinking;
 
     #[test]
     fn take_left_becomes_left_thinking() {
@@ -83,8 +85,7 @@ mod tests {
         let seating_position = table.get_interactions().pop().unwrap();
         let mut unit: Box<State> = Box::new(Thinking::new(Arc::new(seating_position)));
 
-        let mut table = Table::new(1);
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::LeftThinking);
     }
@@ -93,12 +94,10 @@ mod tests {
     fn changes_to_thinking_when_left_fork_is_not_available() {
         let mut table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
-
-        let mut table = Table::new(1);
-        seating_position.get_left_fork(&mut table);
+        seating_position.get_left_fork();
         let mut unit: Box<State> = Box::new(Thinking::new(Arc::new(seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::Thinking);
     }

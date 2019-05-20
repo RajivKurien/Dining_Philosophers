@@ -1,5 +1,6 @@
+use std::sync::{Arc, Mutex};
+
 use crate::dining_philosophers::fork::Fork;
-use std::sync::{Mutex, Arc};
 
 #[derive(Debug, PartialEq)]
 pub struct Table {
@@ -51,33 +52,60 @@ pub struct TableInteraction {
 }
 
 
-impl PartialEq for TableInteraction{
+impl PartialEq for TableInteraction {
     fn eq(&self, other: &TableInteraction) -> bool {
         self.position == other.position
     }
 }
 
 impl TableInteraction {
-    pub fn get_left_fork(&self, table: &mut Table) -> Option<Fork> {
-        table.get_fork(self.position)
+    pub fn get_left_fork(&self) -> Option<Fork> {
+        match self.table.lock()
+            .map(|mut t| {
+                println!("Got hold of the table");
+                t.get_fork(self.position)
+            }) {
+            Ok(value) => { value }
+            Err(_) => {
+                println!("Ack! Couldn't get hold of table");
+                None
+            }
+        }
     }
-    pub fn return_left_fork(&self, fork: Fork, table: &mut Table) {
-        table.return_fork(fork, self.position);
+    pub fn return_left_fork(&self, fork: Fork) {
+        match self.table.lock() {
+            Ok(mut table) => { table.return_fork(fork, self.position) }
+            Err(_) => { panic!("Could not return the left fork!!") }
+        }
     }
-    pub fn get_right_fork(&self, table: &mut Table) -> Option<Fork> {
-        let next_position = (self.position + 1) % table.forks.len();
-        table.get_fork(next_position)
+    pub fn get_right_fork(&self) -> Option<Fork> {
+        match self.table.lock()
+            .map(|mut t| {
+                let next_position = (self.position + 1) % t.forks.len();
+                t.get_fork(next_position)
+            }) {
+            Ok(value) => { value }
+            Err(_) => { None }
+        }
     }
-    pub fn return_right_fork(&self, fork: Fork, table: &mut Table) {
-        let next_position = (self.position + 1) % table.forks.len();
-        table.return_fork(fork, next_position);
+    pub fn return_right_fork(&self, fork: Fork) {
+        match self.table.lock() {
+            Ok(mut table) => {
+                let next_position = (self.position + 1) % table.forks.len();
+                table.return_fork(fork, next_position)
+            }
+            Err(_) => { panic!("Could not return the right fork!!") }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::dining_philosophers::table::{Table, TableInteraction};
+    use std::thread;
+    use std::time::Duration;
+
     use crate::dining_philosophers::fork::Fork;
+    use crate::dining_philosophers::table::{Table, TableInteraction};
 
     #[test]
     fn construct_table() {
@@ -142,66 +170,55 @@ mod tests {
 
     #[test]
     fn table_interaction_get_fork() {
-        let mut table = Table::new(1);
-        let mut table_interactions = table.get_interactions();
+        let mut table_interactions = Table::new(1).get_interactions();
         let unit = table_interactions.pop().unwrap();
 
-        let fork = unit.get_left_fork(&mut Table::new(1));
+        let fork = unit.get_left_fork();
 
         assert_ne!(fork, None);
     }
 
     #[test]
     fn table_interaction_get_adjacent_fork() {
-        let mut table = Table::new(2);
-        let mut table_interactions = table.get_interactions();
+        let mut table_interactions = Table::new(2).get_interactions();
         let unit = table_interactions.pop().unwrap();
 
-        let mut table = Table::new(2);
-        let _left_fork = (unit).get_left_fork(&mut table);
-        let fork = unit.get_right_fork(&mut table);
+        unit.get_left_fork();
+        let fork = unit.get_right_fork();
 
         assert_ne!(fork, None);
     }
 
     #[test]
     fn table_interaction_cannot_get_same_fork() {
-        let mut table = Table::new(1);
-        let mut table_interactions = table.get_interactions();
+        let mut table_interactions = Table::new(1).get_interactions();
         let unit = table_interactions.pop().unwrap();
 
-        let mut table = Table::new(1);
-        let _left_fork = unit.get_left_fork(&mut table);
-        let fork = unit.get_right_fork(&mut table);
+        unit.get_left_fork();
+        let fork = unit.get_right_fork();
 
         assert_eq!(fork, None);
     }
 
     #[test]
-    fn table_interaction_return_fork() {
-        let mut table = Table::new(1);
-        let mut table_interactions = table.get_interactions();
+    fn table_interaction_returns_fork() {
+        let mut table_interactions = Table::new(1).get_interactions();
         let unit = table_interactions.pop().unwrap();
+        let fork = unit.get_left_fork().unwrap();
 
-        let mut table = Table::new(1);
-        let fork = unit.get_left_fork(&mut table).unwrap();
+        unit.return_left_fork(fork);
 
-        unit.return_left_fork(fork, &mut table);
-
-        assert_ne!(table.get_fork(0), None);
+        assert_ne!(unit.get_left_fork(), None);
     }
 
     #[test]
-    fn table_interaction_return_adjacent_fork() {
-        let mut table = Table::new(2);
-        let mut table_interactions = table.get_interactions();
+    fn table_interaction_returns_adjacent_fork() {
+        let mut table_interactions = Table::new(1).get_interactions();
         let unit = table_interactions.pop().unwrap();
+        let fork = unit.get_left_fork().unwrap();
 
-        let mut table = Table::new(2);
-        let fork = unit.get_left_fork(&mut table).unwrap();
+        unit.return_right_fork(fork);
 
-        unit.return_right_fork(fork, &mut table);
-
-        assert_ne!(table.get_fork(0), None);
+        assert_ne!(unit.get_left_fork(), None);
     }
 }

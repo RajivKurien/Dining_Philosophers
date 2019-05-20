@@ -25,12 +25,12 @@ impl RightThinking {
 }
 
 impl State for RightThinking {
-    fn transition(&mut self, table: &mut Table) -> Box<State + Send + Sync> {
-        match self.seating_position.get_left_fork(table) {
+    fn transition(&mut self) -> Box<State + Send + Sync> {
+        match self.seating_position.get_left_fork() {
             None => {
                 println!("{}: Not left, back to thinking", self.seating_position.position);
                 let (philosopher, fork) = self.drop_right();
-                self.seating_position.return_right_fork(fork, table);
+                self.seating_position.return_right_fork(fork);
                 Box::new(philosopher)
             }
             Some(fork) => {
@@ -86,11 +86,10 @@ mod tests {
     fn changes_to_eating_when_left_fork_available() {
         let mut table = Table::new(2);
         let seating_position = table.get_interactions().pop().unwrap();
-        let mut table = Table::new(2);
-        let fork = seating_position.get_right_fork(&mut table).unwrap();
+        let fork = seating_position.get_right_fork().unwrap();
         let mut unit: Box<State> = Box::new(RightThinking::new(fork, Arc::new(seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::Eating);
     }
@@ -100,10 +99,10 @@ mod tests {
         let mut table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
         let mut table = Table::new(1);
-        let mut fork = seating_position.get_right_fork(&mut table);
+        let mut fork = seating_position.get_right_fork();
         let mut unit: Box<State> = Box::new(RightThinking::new(fork.take().unwrap(), Arc::new(seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::Thinking);
     }
@@ -111,15 +110,12 @@ mod tests {
     #[test]
     fn returns_right_fork_when_left_fork_is_not_available() {
         let mut table = Table::new(1);
-        let seating_position = table.get_interactions().pop().unwrap();
-        let mut table = Table::new(1);
-        let mut fork = seating_position.get_right_fork(&mut table);
-        let arc = Arc::new(seating_position);
-        let seating_position = Arc::clone(&arc);
-        let mut unit: Box<State> = Box::new(RightThinking::new(fork.take().unwrap(), arc));
+        let seating_position = Arc::new(table.get_interactions().pop().unwrap());
+        let mut fork = seating_position.get_right_fork();
+        let mut unit: Box<State> = Box::new(RightThinking::new(fork.take().unwrap(), Arc::clone(&seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
-        assert_eq!(seating_position.get_right_fork(&mut table), Some(Fork));
+        assert_eq!(seating_position.get_right_fork(), Some(Fork));
     }
 }

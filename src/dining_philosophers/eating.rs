@@ -1,9 +1,10 @@
+use std::sync::Arc;
+
 use crate::dining_philosophers::fork::Fork;
 use crate::dining_philosophers::left_thinking::LeftThinking;
-use crate::dining_philosophers::right_thinking::RightThinking;
-use crate::dining_philosophers::table::{TableInteraction, Table};
 use crate::dining_philosophers::philosopher::{State, Status};
-use std::sync::Arc;
+use crate::dining_philosophers::right_thinking::RightThinking;
+use crate::dining_philosophers::table::{Table, TableInteraction};
 
 #[derive(Debug, PartialEq)]
 pub struct Eating {
@@ -30,10 +31,10 @@ impl Eating {
 }
 
 impl State for Eating {
-    fn transition(&mut self, table: &mut Table) -> Box<State + Send + Sync> {
+    fn transition(&mut self) -> Box<State + Send + Sync> {
         println!("{}: Drop left, to right thinking", self.seating_position.position);
         let (philosopher, fork) = self.drop_left();
-        self.seating_position.return_left_fork(fork, table);
+        self.seating_position.return_left_fork(fork);
         Box::new(philosopher)
     }
 
@@ -44,13 +45,14 @@ impl State for Eating {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
     use crate::dining_philosophers::eating::Eating;
     use crate::dining_philosophers::fork::Fork;
     use crate::dining_philosophers::left_thinking::LeftThinking;
-    use crate::dining_philosophers::right_thinking::RightThinking;
-    use crate::dining_philosophers::table::{TableInteraction, Table};
     use crate::dining_philosophers::philosopher::{State, Status};
-    use std::sync::{Arc, Mutex};
+    use crate::dining_philosophers::right_thinking::RightThinking;
+    use crate::dining_philosophers::table::{Table, TableInteraction};
 
     #[test]
     fn eating_drop_right_becomes_left_thinking() {
@@ -84,13 +86,11 @@ mod tests {
     fn changes_to_right_thinking() {
         let mut table = Table::new(2);
         let seating_position = table.get_interactions().pop().unwrap();
-
-        let mut table = Table::new(2);
-        let left_fork = seating_position.get_left_fork(&mut table).unwrap();
-        let right_fork = seating_position.get_right_fork(&mut table).unwrap();
+        let left_fork = seating_position.get_left_fork().unwrap();
+        let right_fork = seating_position.get_right_fork().unwrap();
         let mut unit: Box<State> = Box::new(Eating::new(left_fork, right_fork, Arc::new(seating_position)));
 
-        unit = unit.transition(&mut table);
+        unit = unit.transition();
 
         assert_eq!(unit.state(), Status::RightThinking);
     }
@@ -99,18 +99,13 @@ mod tests {
     fn acts_to_return_left_fork() {
         let mut table = Table::new(2);
         let mut interactions = table.get_interactions();
-        let seating_position = interactions.pop().unwrap();
+        let seating_position = Arc::new(interactions.pop().unwrap());
+        let left_fork = seating_position.get_left_fork().unwrap();
+        let right_fork = seating_position.get_right_fork().unwrap();
+        let mut unit: Box<State> = Box::new(Eating::new(left_fork, right_fork, Arc::clone(&seating_position)));
 
-        let mut table = Table::new(2);
-        let left_fork = seating_position.get_left_fork(&mut table).unwrap();
-        let right_fork = seating_position.get_right_fork(&mut table).unwrap();
-        let arc = Arc::new(seating_position);
-        let seating_position = Arc::clone(&arc);
-        let mut unit: Box<State> = Box::new(Eating::new(left_fork, right_fork, arc));
+        unit = unit.transition();
 
-        unit = unit.transition(&mut table);
-
-
-        assert_eq!(seating_position.get_left_fork(&mut table), Some(Fork));
+        assert_eq!(seating_position.get_left_fork(), Some(Fork));
     }
 }

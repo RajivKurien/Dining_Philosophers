@@ -1,6 +1,7 @@
-use crate::dining_philosophers::table::Table;
-use std::sync::{Mutex, Arc};
 use core::borrow::BorrowMut;
+use std::sync::{Arc, Mutex};
+
+use crate::dining_philosophers::table::Table;
 
 pub struct Philosopher {
     pub state: Box<State + Send + Sync>,
@@ -27,7 +28,7 @@ pub enum Status {
 }
 
 pub trait State {
-    fn transition(& mut self, table: &mut Table) -> Box<State + Send + Sync>;
+    fn transition(&mut self) -> Box<State + Send + Sync>;
 
     /// This is used only for unit testing
     /// Since we are using Trait Objects, it is difficult to get the specific type
