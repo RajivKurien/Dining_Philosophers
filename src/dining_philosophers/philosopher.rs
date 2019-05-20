@@ -2,15 +2,15 @@ use crate::dining_philosophers::table::Table;
 use std::sync::{Mutex, Arc};
 use core::borrow::BorrowMut;
 
-pub struct Actor {
-    pub philosopher: Box<Philosopher + Send + Sync>,
-    pub table: Arc<Mutex<Table>>,
+pub struct Philosopher {
+    pub state: Box<State + Send + Sync>,
 }
 
-impl Actor {
-    pub fn execute(&mut self) {
+impl Philosopher {
+    pub fn act(&mut self) {
         println!("---");
-        self.philosopher = self.philosopher.act(self.table.lock().unwrap().borrow_mut());
+        unimplemented!();
+//        self.state = self.state.transition(self.table.lock().unwrap().borrow_mut());
     }
 
 //    pub fn get_closure<'a>(&'a mut self) -> Box<dyn FnMut() -> ()> {
@@ -19,29 +19,28 @@ impl Actor {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum State {
+pub enum Status {
     Thinking,
     LeftThinking,
     RightThinking,
     Eating,
 }
 
-pub trait Philosopher {
-    fn act(& mut self, table: &mut Table) -> Box<Philosopher + Send + Sync>;
+pub trait State {
+    fn transition(& mut self, table: &mut Table) -> Box<State + Send + Sync>;
 
     /// This is used only for unit testing
     /// Since we are using Trait Objects, it is difficult to get the specific type
     /// of a Philosopher
-    fn state(&self) -> State;
+    fn state(&self) -> Status;
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::dining_philosophers::philosophers::Actor;
-    use crate::dining_philosophers::thinking_philosopher::ThinkingPhilosopher;
-    use std::sync::{Arc, Mutex};
-    use crate::dining_philosophers::table::Table;
-    use crate::dining_philosophers::philosophers::State::LeftThinking;
+//    use crate::dining_philosophers::philosopher::Philosopher;
+//    use crate::dining_philosophers::thinking::Thinking;
+//    use std::sync::{Arc, Mutex};
+//    use crate::dining_philosophers::table::Table;
 
 //    #[test]
 //    fn get_closures() {

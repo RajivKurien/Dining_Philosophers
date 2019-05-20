@@ -1,5 +1,5 @@
 use crate::dining_philosophers::fork::Fork;
-use std::rc::Rc;
+use std::sync::{Mutex, Arc};
 
 #[derive(Debug, PartialEq)]
 pub struct Table {
@@ -9,11 +9,9 @@ pub struct Table {
 impl Table {
     pub fn new(size: usize) -> Table {
         let mut forks = Vec::with_capacity(size);
-        let mut seating_positions = Vec::with_capacity(size);
 
         for id in 0..size {
             forks.push(Some(Fork {}));
-            seating_positions.push(Rc::new(SeatingPosition { position: id }))
         }
 
         Table {
@@ -21,19 +19,24 @@ impl Table {
         }
     }
 
-    pub fn get_seating_positions(&self) -> Vec<SeatingPosition> {
+    pub fn get_interactions(self) -> Vec<TableInteraction> {
         let size = self.forks.len();
-        let mut seating_positions = Vec::with_capacity(size);
+        let mut table_interactions = Vec::with_capacity(size);
+        let table = Mutex::new(self);
+        let arc = Arc::new(table);
 
         for id in 0..size {
-            seating_positions.push(SeatingPosition { position: id })
+            table_interactions.push(TableInteraction { position: id, table: Arc::clone(&arc) })
         }
 
-        seating_positions
+        table_interactions
     }
 
     fn get_fork(&mut self, position: usize) -> Option<Fork> {
-        self.forks[position].take()
+        match position < self.forks.len() {
+            true => self.forks[position].take(),
+            false => None
+        }
     }
 
     fn return_fork(&mut self, fork: Fork, position: usize) {
@@ -41,12 +44,20 @@ impl Table {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct SeatingPosition {
-    pub position: usize
+#[derive(Debug)]
+pub struct TableInteraction {
+    pub position: usize,
+    pub table: Arc<Mutex<Table>>,
 }
 
-impl SeatingPosition {
+
+impl PartialEq for TableInteraction{
+    fn eq(&self, other: &TableInteraction) -> bool {
+        self.position == other.position
+    }
+}
+
+impl TableInteraction {
     pub fn get_left_fork(&self, table: &mut Table) -> Option<Fork> {
         table.get_fork(self.position)
     }
@@ -65,9 +76,8 @@ impl SeatingPosition {
 
 #[cfg(test)]
 mod tests {
-    use crate::dining_philosophers::table::{Table, SeatingPosition};
+    use crate::dining_philosophers::table::{Table, TableInteraction};
     use crate::dining_philosophers::fork::Fork;
-    use std::rc::Rc;
 
     #[test]
     fn construct_table() {
@@ -86,11 +96,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn get_forks_panics_when_position_is_larger_than_table_size() {
+    fn cannot_get_fork_of_index_larger_than_table_size() {
         let mut unit = Table::new(2);
 
-        unit.get_fork(3);
+        assert_eq!(unit.get_fork(3), None);
+    }
+
+    #[test]
+    fn cannot_get_fork_of_index_equal_to_table_size() {
+        let mut unit = Table::new(2);
+
+        assert_eq!(unit.get_fork(2), None);
     }
 
     #[test]
@@ -125,34 +141,36 @@ mod tests {
     }
 
     #[test]
-    fn seating_position_get_fork() {
+    fn table_interaction_get_fork() {
         let mut table = Table::new(1);
-        let mut seating_positions = table.get_seating_positions();
-        let unit = seating_positions.pop().unwrap();
+        let mut table_interactions = table.get_interactions();
+        let unit = table_interactions.pop().unwrap();
 
-        let fork = unit.get_left_fork(&mut table);
+        let fork = unit.get_left_fork(&mut Table::new(1));
 
         assert_ne!(fork, None);
     }
 
     #[test]
-    fn seating_position_get_adjacent_fork() {
+    fn table_interaction_get_adjacent_fork() {
         let mut table = Table::new(2);
-        let mut seating_positions = table.get_seating_positions();
-        let unit = seating_positions.pop().unwrap();
+        let mut table_interactions = table.get_interactions();
+        let unit = table_interactions.pop().unwrap();
 
-        let _left_fork = unit.get_left_fork(&mut table);
+        let mut table = Table::new(2);
+        let _left_fork = (unit).get_left_fork(&mut table);
         let fork = unit.get_right_fork(&mut table);
 
         assert_ne!(fork, None);
     }
 
     #[test]
-    fn seating_position_cannot_get_same_fork() {
+    fn table_interaction_cannot_get_same_fork() {
         let mut table = Table::new(1);
-        let mut seating_positions = table.get_seating_positions();
-        let unit = seating_positions.pop().unwrap();
+        let mut table_interactions = table.get_interactions();
+        let unit = table_interactions.pop().unwrap();
 
+        let mut table = Table::new(1);
         let _left_fork = unit.get_left_fork(&mut table);
         let fork = unit.get_right_fork(&mut table);
 
@@ -160,11 +178,12 @@ mod tests {
     }
 
     #[test]
-    fn seating_position_return_fork() {
+    fn table_interaction_return_fork() {
         let mut table = Table::new(1);
-        let mut seating_positions = table.get_seating_positions();
-        let unit = seating_positions.pop().unwrap();
+        let mut table_interactions = table.get_interactions();
+        let unit = table_interactions.pop().unwrap();
 
+        let mut table = Table::new(1);
         let fork = unit.get_left_fork(&mut table).unwrap();
 
         unit.return_left_fork(fork, &mut table);
@@ -173,11 +192,12 @@ mod tests {
     }
 
     #[test]
-    fn seating_position_return_adjacent_fork() {
+    fn table_interaction_return_adjacent_fork() {
         let mut table = Table::new(2);
-        let mut seating_positions = table.get_seating_positions();
-        let unit = seating_positions.pop().unwrap();
+        let mut table_interactions = table.get_interactions();
+        let unit = table_interactions.pop().unwrap();
 
+        let mut table = Table::new(2);
         let fork = unit.get_left_fork(&mut table).unwrap();
 
         unit.return_right_fork(fork, &mut table);

@@ -2,10 +2,9 @@ mod thread_pool;
 mod dining_philosophers;
 
 
-use crate::thread_pool::thread_pool::ThreadPool;
-use crate::dining_philosophers::table::{Table, SeatingPosition};
-use crate::dining_philosophers::thinking_philosopher::ThinkingPhilosopher;
-use crate::dining_philosophers::philosophers::Actor;
+use crate::dining_philosophers::table::{Table, TableInteraction};
+use crate::dining_philosophers::thinking::Thinking;
+use crate::dining_philosophers::philosopher::Philosopher;
 
 use std::sync::{Mutex, Arc};
 use std::thread;
@@ -18,24 +17,21 @@ fn main() {
 
     let size = 5;
     let table = Table::new(size);
-    let seating_positions: Vec<Arc<SeatingPosition>> = table.get_seating_positions().into_iter()
+    let seating_positions: Vec<Arc<TableInteraction>> = table.get_interactions().into_iter()
         .map(|s| Arc::new(s))
         .collect();
 
-    let table = Arc::new(Mutex::new(table));
     let mut actors = Vec::with_capacity(size);
-//    let thread_pool = ThreadPool::new(size);
 
     for i in 0..size {
-        actors.push(Actor {
-            philosopher: Box::new(ThinkingPhilosopher::new(seating_positions[i].clone())),
-            table: Arc::clone(&table),
+        actors.push(Philosopher {
+            state: Box::new(Thinking::new(seating_positions[i].clone()))
         })
     }
 
-    let update_state = |i: usize, actors: &mut Vec<Actor>| {
+    let update_state = |i: usize, actors: &mut Vec<Philosopher>| {
         loop {
-            (&mut actors[i] as &mut Actor).execute();
+            (&mut actors[i] as &mut Philosopher).act();
             thread::sleep(Duration::from_secs(2));
         }
     };
