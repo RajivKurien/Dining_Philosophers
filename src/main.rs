@@ -1,6 +1,7 @@
-extern crate futures;
+extern crate env_logger;
+#[macro_use]
+extern crate log;
 
-use std::thread;
 use std::time::Duration;
 
 use crate::dining_philosophers::philosopher::Philosopher;
@@ -12,10 +13,12 @@ mod dining_philosophers;
 
 
 fn main() {
+    env_logger::init();
+
     let table_size = 5;
-    let iterations = 500;
-    println!("The {} philosophers", table_size);
-    println!("In {} iterations", iterations);
+    let iterations = 2;
+    info!("The {} philosophers", table_size);
+    info!("In {} iterations", iterations);
 
     let pool = ThreadPool::new(table_size);
     let mut seating_positions: Vec<TableInteraction> = Table::new(table_size).get_interactions()

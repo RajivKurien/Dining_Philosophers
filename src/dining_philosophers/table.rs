@@ -66,7 +66,7 @@ impl TableInteraction {
             }) {
             Ok(value) => { value }
             Err(_) => {
-                println!("{}: Ack! Couldn't get hold of table", self.position);
+                error!("{}: Ack! Couldn't get hold of table", self.position);
                 None
             }
         }

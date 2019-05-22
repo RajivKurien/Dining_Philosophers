@@ -1,25 +1,23 @@
-use std::sync::Arc;
-
 use crate::dining_philosophers::table::TableInteraction;
 use crate::dining_philosophers::thinking::Thinking;
 
 pub struct Philosopher {
-    state: Box<StateMachine + Send>,
+    sm: Box<StateMachine + Send>,
 }
 
 impl Philosopher {
     pub fn new(action: TableInteraction) -> Self {
         Philosopher {
-            state: Box::new(Thinking::new(Arc::new(action))),
+            sm: Box::new(Thinking::new(action)),
         }
     }
 
     pub fn act(&mut self) {
-        self.state = self.state.transition();
+        self.sm = self.sm.transition();
     }
 
     pub fn state(&self) -> State {
-        self.state.state()
+        self.sm.state()
     }
 }
 
@@ -43,17 +41,15 @@ pub trait StateMachine {
 #[cfg(test)]
 mod tests {
     use crate::dining_philosophers::philosopher::Philosopher;
-    use crate::dining_philosophers::philosopher::State::LeftThinking;
+    use crate::dining_philosophers::philosopher::State::Thinking;
     use crate::dining_philosophers::table::Table;
 
     #[test]
-    fn philosopher_state_changes() {
-        let table = Table::new(2);
-        let mut interactions = table.get_interactions();
-        let mut philosopher = Philosopher::new(interactions.pop().unwrap());
+    fn philosopher_starts_as_thinking() {
+        let mut interactions = Table::new(2).get_interactions();
 
-        philosopher.act();
+        let unit = Philosopher::new(interactions.pop().unwrap());
 
-        assert_eq!(LeftThinking, philosopher.state());
+        assert_eq!(Thinking, unit.state());
     }
 }

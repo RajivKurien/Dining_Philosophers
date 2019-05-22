@@ -5,4 +5,5 @@ authors = ["Rajiv Kurien <rajiv.kurien@zuhlke.com>"]
 edition = "2018"
 
 [dependencies]
-futures = "0.1"
+log = {version = "0.4", features = ["max_level_trace", "release_max_level_info"]}
+env_logger = "0.6"

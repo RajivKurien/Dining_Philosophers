@@ -46,3 +46,11 @@ Each philosopher transitions between four possible states:
 
 At each state the philosopher has three other possible states they can attempt to move towards.
 Eg: A philosopher in state 1 can attempt move to 1, 2, or 3. 
+
+
+## Logging
+The project uses the env_logger crate which is configured via the environment variable `RUST_LOG`. Eg:
+
+```
+RUST_LOG=debug ./target/debug/Dining_Philosophers
+```

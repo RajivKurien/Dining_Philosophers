@@ -10,7 +10,7 @@ impl<F: FnOnce()> FnBox for F {
 
 type Job = Box<dyn FnBox + Send + 'static>;
 
-pub enum Message{
+pub enum Message {
     NewJob(Job),
-    Terminate
+    Terminate,
 }

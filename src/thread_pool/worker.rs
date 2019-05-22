@@ -1,7 +1,8 @@
-use std::thread;
-use std::sync::mpsc;
 use std::sync::Arc;
+use std::sync::mpsc;
 use std::sync::Mutex;
+use std::thread;
+
 use crate::thread_pool::message::Message;
 
 pub struct Worker {
@@ -17,11 +18,11 @@ impl Worker {
 
                 match message {
                     Message::NewJob(job) => {
-                        println!("Worker {} got a job; executing.", id);
+                        trace!("Worker {} got a job; executing.", id);
                         job.call_box();
                     }
                     Message::Terminate => {
-                        println!("Worker {} was told to terminate.", id);
+                        trace!("Worker {} was told to terminate.", id);
                         break;
                     }
                 }
