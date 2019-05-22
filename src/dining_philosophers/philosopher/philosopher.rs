@@ -26,32 +26,20 @@ impl Philosopher {
         self.history.push(state);
     }
 
-    pub fn state(&self) -> State {
-        self.sm.state()
-    }
-
-    pub fn history(&self) -> &Vec<State> {
-        return &self.history;
-    }
-
     pub fn write(&self, store: &mut HashMap<usize, Vec<State>>) {
         store.insert(self.id, self.history.to_vec());
     }
 
-    pub fn id(&self) -> usize {
-        self.id
-    }
-}
-
-pub struct AlwaysThinking {}
-
-impl StateMachine for AlwaysThinking {
-    fn transition(&mut self) -> Box<StateMachine + Send> {
-        Box::new(AlwaysThinking{})
-    }
-
     fn state(&self) -> State {
-        State::Thinking
+        self.sm.state()
+    }
+
+    fn history(&self) -> &Vec<State> {
+        return &self.history;
+    }
+
+    fn id(&self) -> usize {
+        self.id
     }
 }
 
@@ -65,14 +53,14 @@ mod tests {
 
     #[test]
     fn has_state() {
-        let unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
+        let unit = Philosopher::new(1, Box::new(MockStateMachine{}));
 
         assert_eq!(Thinking, unit.state());
     }
 
     #[test]
     fn keeps_a_record_of_state_transitions() {
-        let mut unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
+        let mut unit = Philosopher::new(1, Box::new(MockStateMachine{}));
 
         let iterations = 10;
         for _ in 1..iterations {
@@ -84,7 +72,7 @@ mod tests {
 
     #[test]
     fn has_id() {
-        let unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
+        let unit = Philosopher::new(1, Box::new(MockStateMachine{}));
 
         assert_eq!(unit.id(), 1);
     }
@@ -92,7 +80,7 @@ mod tests {
     #[test]
     fn write_history() {
         let mut hash_map = HashMap::with_capacity(1);
-        let mut unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
+        let mut unit = Philosopher::new(1, Box::new(MockStateMachine{}));
         let iterations = 10;
         for _ in 1..iterations {
             unit.act();
@@ -103,21 +91,11 @@ mod tests {
         assert_eq!(hash_map.get(&1).unwrap().len(), iterations);
     }
 
-    struct MockStateMachine {
-        state: State
-    }
-
-    impl Default for MockStateMachine {
-        fn default() -> Self {
-            MockStateMachine {
-                state: State::Thinking
-            }
-        }
-    }
+    struct MockStateMachine {}
 
     impl StateMachine for MockStateMachine {
         fn transition(&mut self) -> Box<StateMachine + Send> {
-            Box::new(MockStateMachine::default())
+            Box::new(MockStateMachine{})
         }
 
         fn state(&self) -> State {

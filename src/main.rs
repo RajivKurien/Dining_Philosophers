@@ -5,9 +5,8 @@ extern crate log;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::dining_philosophers::philosopher::philosopher::{AlwaysThinking, Philosopher};
+use crate::dining_philosophers::philosopher::philosopher::Philosopher;
 use crate::dining_philosophers::philosopher::state_machine::{State, StateMachine};
-use crate::dining_philosophers::resource_hierarchy_impl::thinking::Thinking;
 use crate::dining_philosophers::table::{Table, TableInteraction};
 use crate::thread_pool::thread_pool::ThreadPool;
 
@@ -34,15 +33,28 @@ fn run_simulation(number_of_philosophers: usize, iterations: i32, results: &Arc<
     let pool = ThreadPool::new(number_of_philosophers);
     for _ in 0..number_of_philosophers {
         let table_interaction = table_interactions.pop().unwrap();
-        let mut p = Philosopher::new(
-            table_interaction.position,
-            Box::new(AlwaysThinking {}));
+
+        let mut p = Philosopher::new(table_interaction.position, Box::new(AlwaysThinking {}));
+
         let results_copy = Arc::clone(results);
+
         pool.execute(move || {
             for __ in 0..iterations {
                 p.act();
             }
             p.write(&mut results_copy.lock().unwrap());
         })
+    }
+}
+
+pub struct AlwaysThinking {}
+
+impl StateMachine for AlwaysThinking {
+    fn transition(&mut self) -> Box<StateMachine + Send> {
+        Box::new(AlwaysThinking {})
+    }
+
+    fn state(&self) -> State {
+        State::Thinking
     }
 }
