@@ -53,7 +53,6 @@ pub struct TableInteraction {
     pub table: Arc<Mutex<Table>>,
 }
 
-
 impl PartialEq for TableInteraction {
     fn eq(&self, other: &TableInteraction) -> bool {
         self.position == other.position

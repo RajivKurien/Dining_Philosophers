@@ -1,9 +1,4 @@
-pub mod philosopher;
+pub mod resource_hierarchy_impl;
 pub mod table;
 pub mod fork;
-pub mod eating;
-pub mod thinking;
-pub mod left_thinking;
-pub mod right_thinking;
-
-
+pub mod philosopher;

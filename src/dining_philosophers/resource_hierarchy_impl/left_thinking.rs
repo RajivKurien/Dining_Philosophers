@@ -1,8 +1,8 @@
-use crate::dining_philosophers::eating::Eating;
 use crate::dining_philosophers::fork::Fork;
-use crate::dining_philosophers::philosopher::{State, StateMachine};
 use crate::dining_philosophers::table::TableInteraction;
-use crate::dining_philosophers::thinking::Thinking;
+use crate::dining_philosophers::resource_hierarchy_impl::thinking::Thinking;
+use crate::dining_philosophers::philosopher::state_machine::{StateMachine, State};
+use crate::dining_philosophers::resource_hierarchy_impl::eating::Eating;
 
 #[derive(Debug, PartialEq)]
 pub struct LeftThinking {
@@ -54,12 +54,12 @@ impl StateMachine for LeftThinking {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use crate::dining_philosophers::eating::Eating;
     use crate::dining_philosophers::fork::Fork;
-    use crate::dining_philosophers::left_thinking::LeftThinking;
-    use crate::dining_philosophers::philosopher::{State, StateMachine};
+    use crate::dining_philosophers::resource_hierarchy_impl::left_thinking::LeftThinking;
     use crate::dining_philosophers::table::{Table, TableInteraction};
-    use crate::dining_philosophers::thinking::Thinking;
+    use crate::dining_philosophers::resource_hierarchy_impl::thinking::Thinking;
+    use crate::dining_philosophers::philosopher::state_machine::{State, StateMachine};
+    use crate::dining_philosophers::resource_hierarchy_impl::eating::Eating;
 
     #[test]
     fn take_right_becomes_eating() {

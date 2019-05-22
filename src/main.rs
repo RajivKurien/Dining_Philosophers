@@ -5,7 +5,8 @@ extern crate log;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::dining_philosophers::philosopher::{Philosopher, State};
+use crate::dining_philosophers::philosopher::philosopher::Philosopher;
+use crate::dining_philosophers::philosopher::state_machine::State;
 use crate::dining_philosophers::table::{Table, TableInteraction};
 use crate::thread_pool::thread_pool::ThreadPool;
 
@@ -16,7 +17,7 @@ mod dining_philosophers;
 fn main() {
     env_logger::init();
     static NUMBER_OF_PHILOSOPHERS: usize = 5;
-    static ITERATIONS: i32 = 20;
+    static ITERATIONS: i32 = 200;
     let results: Arc<Mutex<HashMap<usize, Vec<State>>>> =
         Arc::new(Mutex::new(HashMap::with_capacity(NUMBER_OF_PHILOSOPHERS)));
 
