@@ -62,7 +62,6 @@ impl TableInteraction {
     pub fn get_left_fork(&self) -> Option<Fork> {
         match self.table.lock()
             .map(|mut t| {
-//                println!("{}: Got hold of the table", self.position);
                 t.get_fork(self.position)
             }) {
             Ok(value) => { value }

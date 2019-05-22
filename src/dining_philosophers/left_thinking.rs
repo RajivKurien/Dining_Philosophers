@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::dining_philosophers::eating::Eating;
 use crate::dining_philosophers::fork::Fork;
-use crate::dining_philosophers::philosopher::{State, Status};
+use crate::dining_philosophers::philosopher::{StateMachine, State};
 use crate::dining_philosophers::table::TableInteraction;
 use crate::dining_philosophers::thinking::Thinking;
 
@@ -27,8 +27,8 @@ impl LeftThinking {
     }
 }
 
-impl State for LeftThinking {
-    fn transition(&mut self) -> Box<State + Send + Sync> {
+impl StateMachine for LeftThinking {
+    fn transition(&mut self) -> Box<StateMachine + Send> {
         match self.seating_position.get_right_fork() {
             None => {
                 println!("{}: Not right, back to thinking", self.seating_position.position);
@@ -43,8 +43,8 @@ impl State for LeftThinking {
         }
     }
 
-    fn state(&self) -> Status {
-        Status::LeftThinking
+    fn state(&self) -> State {
+        State::LeftThinking
     }
 }
 
@@ -55,7 +55,7 @@ mod tests {
     use crate::dining_philosophers::eating::Eating;
     use crate::dining_philosophers::fork::Fork;
     use crate::dining_philosophers::left_thinking::LeftThinking;
-    use crate::dining_philosophers::philosopher::{State, Status};
+    use crate::dining_philosophers::philosopher::{StateMachine, State};
     use crate::dining_philosophers::table::{Table, TableInteraction};
     use crate::dining_philosophers::thinking::Thinking;
 
@@ -83,7 +83,7 @@ mod tests {
         let seating_position = Arc::new(TableInteraction { position: 0, table: Arc::new(Mutex::new(Table::new(1))) });
         let unit = LeftThinking::new(Fork, seating_position.clone());
 
-        assert_eq!(unit.state(), Status::LeftThinking);
+        assert_eq!(unit.state(), State::LeftThinking);
     }
 
     #[test]
@@ -91,11 +91,11 @@ mod tests {
         let table = Table::new(2);
         let seating_position = table.get_interactions().pop().unwrap();
         let fork = seating_position.get_left_fork().unwrap();
-        let mut unit: Box<State> = Box::new(LeftThinking::new(fork, Arc::new(seating_position)));
+        let mut unit: Box<StateMachine> = Box::new(LeftThinking::new(fork, Arc::new(seating_position)));
 
         unit = unit.transition();
 
-        assert_eq!(unit.state(), Status::Eating);
+        assert_eq!(unit.state(), State::Eating);
     }
 
     #[test]
@@ -103,11 +103,11 @@ mod tests {
         let table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
         let mut fork = seating_position.get_left_fork();
-        let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::new(seating_position)));
+        let mut unit: Box<StateMachine> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::new(seating_position)));
 
         unit = unit.transition();
 
-        assert_eq!(unit.state(), Status::Thinking);
+        assert_eq!(unit.state(), State::Thinking);
     }
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
         let table = Table::new(1);
         let seating_position = Arc::new(table.get_interactions().pop().unwrap());
         let mut fork = seating_position.get_left_fork();
-        let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::clone(&seating_position)));
+        let mut unit: Box<StateMachine> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::clone(&seating_position)));
 
         unit.transition();
 

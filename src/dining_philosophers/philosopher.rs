@@ -4,7 +4,7 @@ use crate::dining_philosophers::table::TableInteraction;
 use crate::dining_philosophers::thinking::Thinking;
 
 pub struct Philosopher {
-    state: Box<State + Send + Sync>,
+    state: Box<StateMachine + Send>,
 }
 
 impl Philosopher {
@@ -18,32 +18,32 @@ impl Philosopher {
         self.state = self.state.transition();
     }
 
-    pub fn state(&self) -> Status {
+    pub fn state(&self) -> State {
         self.state.state()
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Status {
+pub enum State {
     Thinking,
     LeftThinking,
     RightThinking,
     Eating,
 }
 
-pub trait State {
-    fn transition(&mut self) -> Box<State + Send + Sync>;
+pub trait StateMachine {
+    fn transition(&mut self) -> Box<StateMachine + Send>;
 
     /// This is used only for unit testing
     /// Since we are using Trait Objects, it is difficult to get the specific type
     /// of a Philosopher
-    fn state(&self) -> Status;
+    fn state(&self) -> State;
 }
 
 #[cfg(test)]
 mod tests {
     use crate::dining_philosophers::philosopher::Philosopher;
-    use crate::dining_philosophers::philosopher::Status::LeftThinking;
+    use crate::dining_philosophers::philosopher::State::LeftThinking;
     use crate::dining_philosophers::table::Table;
 
     #[test]

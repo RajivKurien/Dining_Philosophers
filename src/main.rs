@@ -13,7 +13,7 @@ mod dining_philosophers;
 
 fn main() {
     let table_size = 5;
-    let iterations = 50;
+    let iterations = 500;
     println!("The {} philosophers", table_size);
     println!("In {} iterations", iterations);
 
