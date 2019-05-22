@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::dining_philosophers::eating::Eating;
 use crate::dining_philosophers::fork::Fork;
 use crate::dining_philosophers::philosopher::{State, Status};
-use crate::dining_philosophers::table::{Table, TableInteraction};
+use crate::dining_philosophers::table::TableInteraction;
 use crate::dining_philosophers::thinking::Thinking;
 
 #[derive(Debug, PartialEq)]
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn changes_to_eating_when_right_fork_available() {
-        let mut table = Table::new(2);
+        let table = Table::new(2);
         let seating_position = table.get_interactions().pop().unwrap();
         let fork = seating_position.get_left_fork().unwrap();
         let mut unit: Box<State> = Box::new(LeftThinking::new(fork, Arc::new(seating_position)));
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn changes_to_thinking_when_right_fork_is_not_available() {
-        let mut table = Table::new(1);
+        let table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
         let mut fork = seating_position.get_left_fork();
         let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::new(seating_position)));
@@ -112,12 +112,12 @@ mod tests {
 
     #[test]
     fn returns_left_fork_when_right_fork_is_not_available() {
-        let mut table = Table::new(1);
+        let table = Table::new(1);
         let seating_position = Arc::new(table.get_interactions().pop().unwrap());
         let mut fork = seating_position.get_left_fork();
         let mut unit: Box<State> = Box::new(LeftThinking::new(fork.take().unwrap(), Arc::clone(&seating_position)));
 
-        unit = unit.transition();
+        unit.transition();
 
         assert_eq!(seating_position.get_left_fork(), Some(Fork));
     }

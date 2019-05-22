@@ -4,7 +4,7 @@ use crate::dining_philosophers::fork::Fork;
 use crate::dining_philosophers::left_thinking::LeftThinking;
 use crate::dining_philosophers::philosopher::{State, Status};
 use crate::dining_philosophers::right_thinking::RightThinking;
-use crate::dining_philosophers::table::{Table, TableInteraction};
+use crate::dining_philosophers::table::TableInteraction;
 
 #[derive(Debug, PartialEq)]
 pub struct Thinking {
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn changes_to_left_when_left_fork_available() {
-        let mut table = Table::new(1);
+        let table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
         let mut unit: Box<State> = Box::new(Thinking::new(Arc::new(seating_position)));
 
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn changes_to_thinking_when_left_fork_is_not_available() {
-        let mut table = Table::new(1);
+        let table = Table::new(1);
         let seating_position = table.get_interactions().pop().unwrap();
         seating_position.get_left_fork();
         let mut unit: Box<State> = Box::new(Thinking::new(Arc::new(seating_position)));

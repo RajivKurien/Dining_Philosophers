@@ -11,7 +11,7 @@ impl Table {
     pub fn new(size: usize) -> Table {
         let mut forks = Vec::with_capacity(size);
 
-        for id in 0..size {
+        for _ in 0..size {
             forks.push(Some(Fork {}));
         }
 
@@ -62,12 +62,12 @@ impl TableInteraction {
     pub fn get_left_fork(&self) -> Option<Fork> {
         match self.table.lock()
             .map(|mut t| {
-                println!("Got hold of the table");
+//                println!("{}: Got hold of the table", self.position);
                 t.get_fork(self.position)
             }) {
             Ok(value) => { value }
             Err(_) => {
-                println!("Ack! Couldn't get hold of table");
+                println!("{}: Ack! Couldn't get hold of table", self.position);
                 None
             }
         }
@@ -101,11 +101,8 @@ impl TableInteraction {
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
-    use std::time::Duration;
-
     use crate::dining_philosophers::fork::Fork;
-    use crate::dining_philosophers::table::{Table, TableInteraction};
+    use crate::dining_philosophers::table::Table;
 
     #[test]
     fn construct_table() {
@@ -140,7 +137,7 @@ mod tests {
     #[test]
     fn cannot_get_fork_when_in_use() {
         let mut unit = Table::new(1);
-        let fork = unit.get_fork(0);
+        let _fork = unit.get_fork(0);
 
         let same_fork = unit.get_fork(0);
 

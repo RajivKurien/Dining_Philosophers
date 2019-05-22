@@ -4,7 +4,7 @@ use crate::dining_philosophers::fork::Fork;
 use crate::dining_philosophers::left_thinking::LeftThinking;
 use crate::dining_philosophers::philosopher::{State, Status};
 use crate::dining_philosophers::right_thinking::RightThinking;
-use crate::dining_philosophers::table::{Table, TableInteraction};
+use crate::dining_philosophers::table::TableInteraction;
 
 #[derive(Debug, PartialEq)]
 pub struct Eating {
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn changes_to_right_thinking() {
-        let mut table = Table::new(2);
+        let table = Table::new(2);
         let seating_position = table.get_interactions().pop().unwrap();
         let left_fork = seating_position.get_left_fork().unwrap();
         let right_fork = seating_position.get_right_fork().unwrap();
@@ -97,14 +97,14 @@ mod tests {
 
     #[test]
     fn acts_to_return_left_fork() {
-        let mut table = Table::new(2);
+        let table = Table::new(2);
         let mut interactions = table.get_interactions();
         let seating_position = Arc::new(interactions.pop().unwrap());
         let left_fork = seating_position.get_left_fork().unwrap();
         let right_fork = seating_position.get_right_fork().unwrap();
         let mut unit: Box<State> = Box::new(Eating::new(left_fork, right_fork, Arc::clone(&seating_position)));
 
-        unit = unit.transition();
+        unit.transition();
 
         assert_eq!(seating_position.get_left_fork(), Some(Fork));
     }
