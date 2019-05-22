@@ -55,3 +55,7 @@ The project uses the env_logger crate which is configured via the environment va
 ```
 RUST_LOG=debug ./target/debug/Dining_Philosophers
 ```
+
+## Thread pool
+The thread pool implementation is straight from the book:
+[Building a multi-threaded web server](https://doc.rust-lang.org/book/ch20-00-final-project-a-web-server.html)
