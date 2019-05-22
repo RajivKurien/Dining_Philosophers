@@ -30,7 +30,7 @@ Philosophers seated at the numbers, and the forks at the letters.
                / ------ Left Thinking  ------ \  
               /                                \
              /                                  \
-     (1) Thinking                              Eating  (4)
+     (1) Thinking  <-------------------------  Eating  (4)
              \                                  /
               \                                /
                \ ------ Right Thinking ------ /
@@ -44,8 +44,9 @@ Each philosopher transitions between four possible states:
 - **Right Thinking**: the philosopher holds the fork to their right. They are still thinking
 - **Eating**: the philosopher holds both their forks, so they are eating.
 
-At each state the philosopher has three other possible states they can attempt to move towards.
-Eg: A philosopher in state 1 can attempt move to 1, 2, or 3. 
+At each state the philosopher (except state 4) has two (excluding self) possible states they can attempt to move towards.
+Eg: A philosopher in state 1 can attempt move to 2 or 3.
+A philosopher at state 4 can move to three other states (excluding the identity transition). 
 
 
 ## Logging

@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::dining_philosophers::table::TableInteraction;
-use crate::dining_philosophers::philosopher::state_machine::{StateMachine, State};
-use crate::dining_philosophers::resource_hierarchy_impl::thinking::Thinking;
+use crate::dining_philosophers::philosopher::state_machine::{State, StateMachine};
 
 pub struct Philosopher {
     id: usize,
@@ -11,13 +9,14 @@ pub struct Philosopher {
 }
 
 impl Philosopher {
-    pub fn new(action: TableInteraction) -> Self {
+    pub fn new(id: usize, sm: Box<StateMachine + Send>) -> Self {
         let mut philosopher = Philosopher {
-            id: action.position,
-            sm: Box::new(Thinking::new(action)),
+            id,
+            sm,
             history: Vec::new(),
         };
         philosopher.history.push(philosopher.state());
+
         philosopher
     }
 
@@ -44,27 +43,36 @@ impl Philosopher {
     }
 }
 
+pub struct AlwaysThinking {}
+
+impl StateMachine for AlwaysThinking {
+    fn transition(&mut self) -> Box<StateMachine + Send> {
+        Box::new(AlwaysThinking{})
+    }
+
+    fn state(&self) -> State {
+        State::Thinking
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
-    use crate::dining_philosophers::table::Table;
     use crate::dining_philosophers::philosopher::philosopher::Philosopher;
+    use crate::dining_philosophers::philosopher::state_machine::{State, StateMachine};
     use crate::dining_philosophers::philosopher::state_machine::State::Thinking;
 
     #[test]
-    fn starts_as_thinking() {
-        let mut interactions = Table::new(2).get_interactions();
-
-        let unit = Philosopher::new(interactions.pop().unwrap());
+    fn has_state() {
+        let unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
 
         assert_eq!(Thinking, unit.state());
     }
 
     #[test]
     fn keeps_a_record_of_state_transitions() {
-        let mut interactions = Table::new(2).get_interactions();
-        let mut unit = Philosopher::new(interactions.pop().unwrap());
+        let mut unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
 
         let iterations = 10;
         for _ in 1..iterations {
@@ -76,18 +84,15 @@ mod tests {
 
     #[test]
     fn has_id() {
-        let mut interactions = Table::new(2).get_interactions();
-
-        let unit = Philosopher::new(interactions.pop().unwrap());
+        let unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
 
         assert_eq!(unit.id(), 1);
     }
 
     #[test]
     fn write_history() {
-        let mut interactions = Table::new(2).get_interactions();
-        let mut unit = Philosopher::new(interactions.pop().unwrap());
         let mut hash_map = HashMap::with_capacity(1);
+        let mut unit = Philosopher::new(1, Box::new(MockStateMachine::default()));
         let iterations = 10;
         for _ in 1..iterations {
             unit.act();
@@ -96,5 +101,27 @@ mod tests {
         unit.write(&mut hash_map);
 
         assert_eq!(hash_map.get(&1).unwrap().len(), iterations);
+    }
+
+    struct MockStateMachine {
+        state: State
+    }
+
+    impl Default for MockStateMachine {
+        fn default() -> Self {
+            MockStateMachine {
+                state: State::Thinking
+            }
+        }
+    }
+
+    impl StateMachine for MockStateMachine {
+        fn transition(&mut self) -> Box<StateMachine + Send> {
+            Box::new(MockStateMachine::default())
+        }
+
+        fn state(&self) -> State {
+            State::Thinking
+        }
     }
 }

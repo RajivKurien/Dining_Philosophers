@@ -5,8 +5,9 @@ extern crate log;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::dining_philosophers::philosopher::philosopher::Philosopher;
-use crate::dining_philosophers::philosopher::state_machine::State;
+use crate::dining_philosophers::philosopher::philosopher::{AlwaysThinking, Philosopher};
+use crate::dining_philosophers::philosopher::state_machine::{State, StateMachine};
+use crate::dining_philosophers::resource_hierarchy_impl::thinking::Thinking;
 use crate::dining_philosophers::table::{Table, TableInteraction};
 use crate::thread_pool::thread_pool::ThreadPool;
 
@@ -29,10 +30,13 @@ fn main() {
 fn run_simulation(number_of_philosophers: usize, iterations: i32, results: &Arc<Mutex<HashMap<usize, Vec<State>>>>) {
     info!("The {} philosophers for {} iterations", number_of_philosophers, iterations);
 
-    let mut seating_positions: Vec<TableInteraction> = Table::new(number_of_philosophers).get_interactions();
+    let mut table_interactions: Vec<TableInteraction> = Table::new(number_of_philosophers).get_interactions();
     let pool = ThreadPool::new(number_of_philosophers);
     for _ in 0..number_of_philosophers {
-        let mut p = Philosopher::new(seating_positions.pop().unwrap());
+        let table_interaction = table_interactions.pop().unwrap();
+        let mut p = Philosopher::new(
+            table_interaction.position,
+            Box::new(AlwaysThinking {}));
         let results_copy = Arc::clone(results);
         pool.execute(move || {
             for __ in 0..iterations {
