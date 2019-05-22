@@ -9,6 +9,8 @@ pub struct Table {
 
 impl Table {
     pub fn new(size: usize) -> Table {
+        assert!(size > 0);
+
         let mut forks = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -108,6 +110,12 @@ mod tests {
         let unit = Table::new(1);
 
         assert_eq!(unit, Table { forks: vec![Some(Fork {})] });
+    }
+
+    #[test]
+    #[should_panic]
+    fn cannot_construct_table_with_size_less_than_one() {
+        Table::new(0);
     }
 
     #[test]
