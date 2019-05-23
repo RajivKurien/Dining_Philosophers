@@ -61,41 +61,21 @@ impl PartialEq for TableInteraction {
 
 impl TableInteraction {
     pub fn get_left_fork(&self) -> Option<Fork> {
-        match self.table.lock()
-            .map(|mut t| {
-                t.get_fork(self.position)
-            }) {
-            Ok(value) => { value }
-            Err(_) => {
-                error!("{}: Ack! Couldn't get hold of table", self.position);
-                None
-            }
-        }
+        self.table.lock().unwrap().get_fork(self.position)
     }
+
     pub fn return_left_fork(&self, fork: Fork) {
-        match self.table.lock() {
-            Ok(mut table) => { table.return_fork(fork, self.position) }
-            Err(_) => { panic!("Could not return the left fork!!") }
-        }
+        self.table.lock().unwrap().return_fork(fork, self.position)
     }
     pub fn get_right_fork(&self) -> Option<Fork> {
-        match self.table.lock()
-            .map(|mut t| {
-                let next_position = (self.position + 1) % t.forks.len();
-                t.get_fork(next_position)
-            }) {
-            Ok(value) => { value }
-            Err(_) => { None }
-        }
+        let mut t = self.table.lock().unwrap();
+        let next_position = (self.position + 1) % t.forks.len();
+        t.get_fork(next_position)
     }
     pub fn return_right_fork(&self, fork: Fork) {
-        match self.table.lock() {
-            Ok(mut table) => {
-                let next_position = (self.position + 1) % table.forks.len();
-                table.return_fork(fork, next_position)
-            }
-            Err(_) => { panic!("Could not return the right fork!!") }
-        }
+        let mut t = self.table.lock().unwrap();
+        let next_position = (self.position + 1) % t.forks.len();
+        t.return_fork(fork, next_position);
     }
 }
 
